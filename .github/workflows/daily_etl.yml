@@ -1,0 +1,34 @@
+name: Daily Stock ETL
+
+on:
+  schedule:
+    # Corre todos los días a las 22:00 UTC (5:00 p.m. hora Colombia).
+    # A esa hora la BVC ya cerró (3:00 pm COT) y NYSE/NASDAQ también (3:00 pm COT),
+    # y Yahoo ya procesó los datos del día — así los ADRs y las .CL llegan frescos.
+    - cron: "0 22 * * *"
+  workflow_dispatch: {}  # permite correrlo manualmente desde la pestaña "Actions" en GitHub
+
+jobs:
+  run-etl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"
+
+      - name: Run ETL pipeline
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: python etl_pipeline.py

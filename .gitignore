@@ -1,0 +1,26 @@
+# Credenciales — NUNCA subir
+key.json
+key.jso
+*.json.enc
+service-account*.json
+
+# Entornos virtuales de Python
+.venv/
+venv/
+env/
+
+# Cache y bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Sistemas operativos
+.DS_Store
+Thumbs.db
+
+# Editores / IDE
+.vscode/
+.idea/
+*.swp
