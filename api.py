@@ -62,6 +62,7 @@ client = bigquery.Client(project=PROJECT_ID)
 class Ticker(BaseModel):
     ticker: str
     brand_name: str
+    parent_brand: str
     industry_tag: str
     exchange: str
     country: str
@@ -141,7 +142,8 @@ def list_tickers():
     rows = q(f"SELECT * FROM `{PROJECT_ID}.{DATASET_ID}.tickers_dim` ORDER BY Ticker")
     return [
         Ticker(
-            ticker=r.Ticker, brand_name=r.Brand_Name, industry_tag=r.Industry_Tag,
+            ticker=r.Ticker, brand_name=r.Brand_Name, parent_brand=r.Parent_Brand,
+            industry_tag=r.Industry_Tag,
             exchange=r.Exchange, country=r.Country, currency=r.Currency,
         )
         for r in rows
@@ -159,7 +161,8 @@ def get_ticker(ticker: str):
         raise HTTPException(status_code=404, detail=f"Ticker '{ticker}' no encontrado.")
     r = rows[0]
     return Ticker(
-        ticker=r.Ticker, brand_name=r.Brand_Name, industry_tag=r.Industry_Tag,
+        ticker=r.Ticker, brand_name=r.Brand_Name, parent_brand=r.Parent_Brand,
+        industry_tag=r.Industry_Tag,
         exchange=r.Exchange, country=r.Country, currency=r.Currency,
     )
 

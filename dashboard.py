@@ -17,7 +17,7 @@ import requests
 import streamlit as st
 from plotly.subplots import make_subplots
 
-API_URL = os.environ.get("API_URL", "http://localhost:8080")
+API_URL = os.environ.get("API_URL", "https://stock-etl-api-17483676928.us-central1.run.app")
 
 st.set_page_config(
     page_title="Stock ETL Dashboard",
@@ -32,16 +32,41 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 
 COMPANY_META = {
-    "EC":           {"domain": "ecopetrol.com.co",   "flag": "🇨🇴", "desc": "Empresa petrolera más grande de Colombia y una de las 40 más grandes de América Latina. Produce, refina y transporta hidrocarburos."},
+    # Bancolombia
     "CIB":          {"domain": "grupobancolombia.com", "flag": "🇨🇴", "desc": "Banco más grande de Colombia por activos, con presencia en Centroamérica y Panamá."},
-    "AVAL":         {"domain": "grupoaval.com",       "flag": "🇨🇴", "desc": "Conglomerado financiero colombiano dueño de los bancos Bogotá, Occidente, Popular y AV Villas."},
-    "TGLS":         {"domain": "tecnoglass.com",      "flag": "🇨🇴", "desc": "Fabricante colombiano de vidrio arquitectónico con sede en Barranquilla. Cotiza en NASDAQ y exporta principalmente a USA."},
+
+    # Grupo Aval (3 cotizaciones)
+    "AVAL":         {"domain": "grupoaval.com",       "flag": "🇨🇴", "desc": "Conglomerado financiero dueño de Banco de Bogotá, Occidente, Popular y AV Villas."},
+    "GRUPOAVAL.CL": {"domain": "grupoaval.com",       "flag": "🇨🇴", "desc": "Conglomerado financiero dueño de Banco de Bogotá, Occidente, Popular y AV Villas."},
+    "PFAVAL.CL":    {"domain": "grupoaval.com",       "flag": "🇨🇴", "desc": "Acción preferencial de Grupo Aval. Confiere dividendo preferente pero sin derecho a voto."},
+
+    # Ecopetrol (2 cotizaciones)
+    "EC":           {"domain": "ecopetrol.com.co",    "flag": "🇨🇴", "desc": "Empresa petrolera más grande de Colombia y una de las 40 más grandes de América Latina."},
+    "ECOPETROL.CL": {"domain": "ecopetrol.com.co",    "flag": "🇨🇴", "desc": "Empresa petrolera más grande de Colombia. Cotización local en pesos colombianos."},
+
+    # Otras colombianas
     "ISA.CL":       {"domain": "isa.co",              "flag": "🇨🇴", "desc": "Mayor empresa de transporte de energía eléctrica de Colombia. Opera en varios países latinoamericanos."},
     "NUTRESA.CL":   {"domain": "gruponutresa.com",    "flag": "🇨🇴", "desc": "Líder colombiano en alimentos procesados. Marcas como Chocolisto, Zenú, Noel, Colcafé."},
     "GRUPOSURA.CL": {"domain": "gruposura.com",       "flag": "🇨🇴", "desc": "Holding financiero con inversiones en seguros, pensiones y servicios financieros en Latinoamérica."},
     "CEMARGOS.CL":  {"domain": "argos.co",            "flag": "🇨🇴", "desc": "Mayor cementera colombiana y una de las principales de las Américas. Opera plantas en 16 países."},
-    "AAPL":         {"domain": "apple.com",           "flag": "🇺🇸", "desc": "Diseña y vende iPhone, Mac, iPad y servicios. Empresa más valiosa del mundo por capitalización de mercado."},
-    "MSFT":         {"domain": "microsoft.com",       "flag": "🇺🇸", "desc": "Desarrolla software (Windows, Office), servicios cloud (Azure) y hardware. Segunda empresa más valiosa del mundo."},
+    "TGLS":         {"domain": "tecnoglass.com",      "flag": "🇨🇴", "desc": "Fabricante colombiano de vidrio arquitectónico con sede en Barranquilla. Cotiza en NASDAQ."},
+    "PFDAVVNDA.CL": {"domain": "davivienda.com",      "flag": "🇨🇴", "desc": "Tercer banco de Colombia por activos, filial del Grupo Bolívar. Acción preferencial."},
+    "CORFICOLCF.CL":{"domain": "corficolombiana.com", "flag": "🇨🇴", "desc": "Corporación financiera colombiana, parte del Grupo Aval. Inversiones en energía, infraestructura y agro."},
+    "BOGOTA.CL":    {"domain": "bancodebogota.com",   "flag": "🇨🇴", "desc": "El banco privado más antiguo de Colombia (fundado 1870), parte del Grupo Aval."},
+    "CELSIA.CL":    {"domain": "celsia.com",          "flag": "🇨🇴", "desc": "Empresa de generación y distribución de energía del Grupo Argos, con operaciones en Colombia y Centroamérica."},
+    "GEB.CL":       {"domain": "grupoenergiabogota.com","flag": "🇨🇴", "desc": "Holding energético con presencia en generación, transmisión y distribución en Colombia, Perú y Guatemala."},
+    "CNEC.CL":      {"domain": "canacolenergy.com",   "flag": "🇨🇴", "desc": "Empresa de exploración y producción de gas natural con operaciones principales en Colombia."},
+    "TERPEL.CL":    {"domain": "terpel.com",          "flag": "🇨🇴", "desc": "Distribuidora de combustibles líder en Colombia y Panamá, con estaciones de servicio y lubricantes."},
+    "EXITO.CL":     {"domain": "grupoexito.com.co",   "flag": "🇨🇴", "desc": "Cadena de supermercados y retail más grande de Colombia, con presencia en Uruguay y Argentina."},
+    "ETB.CL":       {"domain": "etb.com.co",          "flag": "🇨🇴", "desc": "Empresa de Telecomunicaciones de Bogotá; provee servicios de internet, telefonía y datos."},
+    "MINEROS.CL":   {"domain": "mineros.com.co",      "flag": "🇨🇴", "desc": "Empresa minera colombiana especializada en producción de oro, con operaciones en Colombia y Nicaragua."},
+    "CONCONCRET.CL":{"domain": "conconcreto.com",     "flag": "🇨🇴", "desc": "Constructora colombiana con presencia en infraestructura y edificaciones en múltiples países latinoamericanos."},
+    "BVC.CL":       {"domain": "bvc.com.co",          "flag": "🇨🇴", "desc": "La propia Bolsa de Valores de Colombia cotizando en sí misma."},
+    "ICOLCAP.CL":   {"domain": "blackrock.com",       "flag": "🇨🇴", "desc": "ETF que replica el índice MSCI COLCAP (principales acciones colombianas). No es una empresa sino un fondo."},
+
+    # USA
+    "AAPL":         {"domain": "apple.com",           "flag": "🇺🇸", "desc": "Diseña y vende iPhone, Mac, iPad y servicios. Empresa más valiosa del mundo por capitalización."},
+    "MSFT":         {"domain": "microsoft.com",       "flag": "🇺🇸", "desc": "Desarrolla software (Windows, Office), servicios cloud (Azure) y hardware. Segunda más valiosa del mundo."},
     "AMZN":         {"domain": "amazon.com",          "flag": "🇺🇸", "desc": "Líder mundial en e-commerce y computación en la nube a través de AWS."},
     "GOOGL":        {"domain": "google.com",          "flag": "🇺🇸", "desc": "Matriz de Google, YouTube y Android. El negocio de anuncios digitales más grande del mundo."},
     "TSLA":         {"domain": "tesla.com",           "flag": "🇺🇸", "desc": "Fabricante de vehículos eléctricos, baterías y sistemas de almacenamiento de energía. Liderada por Elon Musk."},
@@ -51,20 +76,73 @@ COMPANY_META = {
 
 COUNTRY_LABELS = {"colombia": "🇨🇴  Colombia", "usa": "🇺🇸  Estados Unidos"}
 
+# Cotizaciones que existen en el mundo real pero Yahoo Finance NO expone.
+# Se muestran como nota para que el usuario del dashboard sepa que hay más
+# formas de comprar esta empresa aunque no aparezcan en los gráficos.
+MISSING_LISTINGS = {
+    "Bancolombia": [
+        {"ticker": "BCOLOMBIA.CL", "desc": "Acción ordinaria en la BVC — delistada de Yahoo Finance."},
+        {"ticker": "PFBCOLOM.CL",  "desc": "Acción preferencial en la BVC — delistada de Yahoo Finance."},
+    ],
+    "Cementos Argos": [
+        {"ticker": "CLH",  "desc": "ADR en NYSE — delistado de Yahoo Finance."},
+    ],
+}
+
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def resolve_logo_url(ticker: str, brand_name: str) -> str:
+    """Prueba varias fuentes server-side y devuelve la primera que sirva.
+
+    Streamlit sanea el `onerror` de HTML, así que la cascada de fallbacks
+    hay que resolverla en Python antes de renderizar. Se cachea 1 día.
+    """
+    domain = COMPANY_META.get(ticker, {}).get("domain", "")
+    initials_name = brand_name.replace(" ", "+")
+    ui_avatar = (
+        f"https://ui-avatars.com/api/?name={initials_name}"
+        f"&size=220&background=2E75B6&color=fff&bold=true&format=png"
+    )
+    if not domain:
+        return ui_avatar
+    candidates = [
+        f"https://icons.duckduckgo.com/ip3/{domain}.ico",
+        f"https://www.google.com/s2/favicons?domain={domain}&sz=128",
+        f"https://logo.clearbit.com/{domain}",
+    ]
+    headers = {"User-Agent": "Mozilla/5.0"}
+    for url in candidates:
+        try:
+            r = requests.get(url, timeout=3, headers=headers)
+            # Descartamos respuestas vacías o "placeholder" (ej. globo genérico de Google
+            # que suele pesar ~500 bytes).
+            if r.status_code == 200 and len(r.content) > 800:
+                return url
+        except Exception:
+            continue
+    return ui_avatar
+
 
 def logo_html(ticker: str, brand_name: str, size: int = 110) -> str:
-    """HTML con logo primario (FMP) + fallback a Clearbit + fallback final a avatar con iniciales."""
-    domain = COMPANY_META.get(ticker, {}).get("domain", "")
-    primary = f"https://financialmodelingprep.com/image-stock/{ticker.replace('.CL', '')}.png"
-    fallback1 = f"https://logo.clearbit.com/{domain}" if domain else ""
-    initials_name = brand_name.replace(" ", "+")
-    fallback2 = f"https://ui-avatars.com/api/?name={initials_name}&size={size*2}&background=2E75B6&color=fff&bold=true&format=png"
-    return (
-        f'<img src="{primary}" '
-        f'onerror="this.onerror=null; this.src=\'{fallback1 or fallback2}\'; '
-        f'this.onerror=function(){{this.onerror=null; this.src=\'{fallback2}\';}};" '
-        f'width="{size}" style="border-radius: 12px; background: white; padding: 4px;" />'
-    )
+    """Contenedor cuadrado transparente con el logo ya resuelto server-side.
+
+    - Sin fondo blanco (transparente para que se mezcle con el tema oscuro).
+    - `width/height: 100%` en la <img> para que hasta los favicons chicos escalen
+      al tamaño del contenedor (en vez de quedarse en el centro pequeñitos).
+    - `image-rendering: auto` para que el escalado se vea lo más limpio posible.
+    """
+    src = resolve_logo_url(ticker, brand_name)
+    return f'''
+    <div style="
+        width: {size}px; height: {size}px;
+        display: flex; align-items: center; justify-content: center;
+        background: transparent; border-radius: 14px;
+        padding: 4px; margin-top: 4px;
+    ">
+        <img src="{src}"
+             style="width: 100%; height: 100%; object-fit: contain; image-rendering: auto;" />
+    </div>
+    '''
 
 
 # ---------------------------------------------------------------------------
@@ -104,49 +182,73 @@ if not check_api_alive():
 
 tickers = api_get("/tickers")
 
-# Agrupar por país
-by_country = {}
+# Agrupar por parent_brand
+parents = {}  # parent_brand -> lista de tickers
 for t in tickers:
-    by_country.setdefault(t["country"], []).append(t)
+    parents.setdefault(t["parent_brand"], []).append(t)
 
-# Construir opciones ordenadas: primero Colombia, luego USA
-options = []
-label_to_ticker = {}
-for country in ["colombia", "usa"]:
-    if country not in by_country:
-        continue
-    # separador de grupo
-    for t in sorted(by_country[country], key=lambda x: x["brand_name"]):
-        flag = COMPANY_META.get(t["ticker"], {}).get("flag", "")
-        label = f"{flag}  {t['brand_name']} ({t['ticker']})"
-        options.append(label)
-        label_to_ticker[label] = t["ticker"]
+# Ordenar: primero Colombia (por parent_brand alfabético), luego USA
+def sort_key(pb):
+    example = parents[pb][0]
+    country_order = 0 if example["country"] == "colombia" else 1
+    return (country_order, pb)
+
+parent_options = sorted(parents.keys(), key=sort_key)
+
+# Labels bonitos con bandera
+def parent_label(pb):
+    ex = parents[pb][0]
+    flag = COMPANY_META.get(ex["ticker"], {}).get("flag", "")
+    n_listings = len(parents[pb])
+    suffix = f" ({n_listings} cotizaciones)" if n_listings > 1 else ""
+    return f"{flag}  {pb}{suffix}"
+
+label_to_parent = {parent_label(pb): pb for pb in parent_options}
+labels = list(label_to_parent.keys())
 
 st.sidebar.title("⚙️ Configuración")
 
-# Índice por defecto: primera empresa colombiana (Ecopetrol si existe)
+# Default: Ecopetrol si existe
 default_idx = 0
-for i, opt in enumerate(options):
-    if "Ecopetrol" in opt:
+for i, lb in enumerate(labels):
+    if "Ecopetrol" in lb:
         default_idx = i
         break
 
-selected_label = st.sidebar.selectbox(
+selected_parent_label = st.sidebar.selectbox(
     "Empresa",
-    options,
+    labels,
     index=default_idx,
-    help="Todas las 15 empresas están siempre disponibles, aunque hoy no hayan operado.",
+    help="Los tickers de una misma empresa se agrupan por parent_brand.",
 )
-selected_ticker = label_to_ticker[selected_label]
+selected_parent = label_to_parent[selected_parent_label]
+
+# Segundo dropdown solo si la empresa tiene múltiples cotizaciones
+matching = parents[selected_parent]
+if len(matching) > 1:
+    listing_labels = {
+        f"{t['ticker']} — {t['exchange']} ({t['currency']})": t['ticker']
+        for t in sorted(matching, key=lambda x: (x['exchange'], x['ticker']))
+    }
+    selected_listing = st.sidebar.selectbox(
+        "Cotización",
+        list(listing_labels.keys()),
+        help="Esta empresa cotiza en varias bolsas / con varias series.",
+    )
+    selected_ticker = listing_labels[selected_listing]
+else:
+    selected_ticker = matching[0]['ticker']
+    st.sidebar.caption(f"Única cotización: `{selected_ticker}` ({matching[0]['exchange']}, {matching[0]['currency']})")
 
 days = st.sidebar.slider("Días de historia", min_value=7, max_value=730, value=90, step=1)
 
-# Ficha compacta del país seleccionado
+# Ficha compacta
 info_side = next(t for t in tickers if t["ticker"] == selected_ticker)
 st.sidebar.markdown("---")
 st.sidebar.markdown(f"**País**: {COUNTRY_LABELS.get(info_side['country'], info_side['country'])}")
 st.sidebar.markdown(f"**Bolsa**: {info_side['exchange']}")
 st.sidebar.markdown(f"**Moneda**: {info_side['currency']}")
+st.sidebar.markdown(f"**Sector**: {info_side['industry_tag']}")
 
 st.sidebar.markdown("---")
 st.sidebar.caption(f"Fuente: API en {API_URL}\n\nCache de datos: 5 min.")
@@ -160,18 +262,48 @@ info = api_get(f"/tickers/{selected_ticker}")
 meta = COMPANY_META.get(selected_ticker, {})
 
 # Layout de header: logo | nombre + descripción
-h_col1, h_col2 = st.columns([1, 5])
+try:
+    h_col1, h_col2 = st.columns([1, 6], vertical_alignment="center")
+except TypeError:
+    # Streamlit < 1.36 no soporta vertical_alignment
+    h_col1, h_col2 = st.columns([1, 6])
+
 with h_col1:
     st.markdown(logo_html(selected_ticker, info['brand_name'], size=110), unsafe_allow_html=True)
 with h_col2:
     st.markdown(
-        f"# {meta.get('flag', '')}  {info['brand_name']}"
-        f" <span style='font-size:0.5em; color:#888;'>`{info['ticker']}`</span>",
+        f"<h1 style='margin: 0; padding: 0;'>"
+        f"{meta.get('flag', '')} &nbsp;{info['brand_name']}"
+        f" <span style='font-size:0.5em; color:#888; font-weight: normal;'>`{info['ticker']}`</span>"
+        f"</h1>",
         unsafe_allow_html=True,
     )
-    st.markdown(f"**Sector**: {info['industry_tag']}  •  **Bolsa**: {info['exchange']}  •  **Moneda**: {info['currency']}")
+    st.markdown(
+        f"<div style='margin-top: 6px; color: #ddd;'>"
+        f"<b>Sector</b>: {info['industry_tag']} &nbsp;•&nbsp; "
+        f"<b>Bolsa</b>: {info['exchange']} &nbsp;•&nbsp; "
+        f"<b>Moneda</b>: {info['currency']}"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
     if meta.get("desc"):
-        st.markdown(f"<div style='color:#bbb; font-size:0.95em; margin-top:8px;'>{meta['desc']}</div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div style='color:#aaa; font-size:0.92em; margin-top:8px; line-height:1.4;'>"
+            f"{meta['desc']}</div>",
+            unsafe_allow_html=True,
+        )
+
+# Aviso de cotizaciones adicionales no disponibles en la fuente
+missing = MISSING_LISTINGS.get(selected_parent)
+if missing:
+    tickers_str = ", ".join(f"`{m['ticker']}`" for m in missing)
+    detail = " ".join(f"**{m['ticker']}**: {m['desc']}" for m in missing)
+    st.info(
+        f"ℹ️ **{selected_parent}** también cotiza como {tickers_str} en la vida real, "
+        f"pero Yahoo Finance no expone esos tickers actualmente. "
+        f"Solo puedes ver aquí las cotizaciones listadas en el selector. "
+        f"\n\nDetalle: {detail}"
+    )
 
 st.markdown("---")
 

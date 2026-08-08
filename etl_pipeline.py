@@ -48,28 +48,49 @@ DIM_TABLE_REF      = f"{PROJECT_ID}.{DATASET_ID}.{DIM_TABLE_ID}"
 METRICS_TABLE_REF  = f"{PROJECT_ID}.{DATASET_ID}.{METRICS_TABLE_ID}"
 
 # Fuente única de verdad: qué tickers descargar y cuál es su metadata.
-# Los ADRs (NYSE/NASDAQ) cotizan en USD; los `.CL` en la BVC cotizan en COP.
+# `parent_brand` agrupa las múltiples cotizaciones de una misma empresa
+# (ej. Grupo Aval tiene AVAL en NYSE + GRUPOAVAL.CL y PFAVAL.CL en BVC).
 TICKERS = {
-    # Colombia (ADRs en USA)
-    "EC":           {"brand_name": "Ecopetrol",      "industry_tag": "oil_gas",       "exchange": "NYSE",   "country": "colombia", "currency": "USD"},
-    "CIB":          {"brand_name": "Bancolombia",    "industry_tag": "banking",       "exchange": "NYSE",   "country": "colombia", "currency": "USD"},
-    "AVAL":         {"brand_name": "Grupo Aval",     "industry_tag": "financial",     "exchange": "NYSE",   "country": "colombia", "currency": "USD"},
-    "TGLS":         {"brand_name": "Tecnoglass",     "industry_tag": "manufacturing", "exchange": "NASDAQ", "country": "colombia", "currency": "USD"},
+    # === Bancolombia ===
+    "CIB":          {"brand_name": "Bancolombia",             "parent_brand": "Bancolombia",     "industry_tag": "banking",       "exchange": "NYSE",   "country": "colombia", "currency": "USD"},
 
-    # Colombia (BVC local)
-    "ISA.CL":       {"brand_name": "ISA",            "industry_tag": "utilities",     "exchange": "BVC",    "country": "colombia", "currency": "COP"},
-    "NUTRESA.CL":   {"brand_name": "Grupo Nutresa",  "industry_tag": "food",          "exchange": "BVC",    "country": "colombia", "currency": "COP"},
-    "GRUPOSURA.CL": {"brand_name": "Grupo SURA",     "industry_tag": "financial",     "exchange": "BVC",    "country": "colombia", "currency": "COP"},
-    "CEMARGOS.CL":  {"brand_name": "Cementos Argos", "industry_tag": "materials",     "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    # === Grupo Aval (múltiples cotizaciones) ===
+    "AVAL":         {"brand_name": "Grupo Aval",              "parent_brand": "Grupo Aval",      "industry_tag": "financial",     "exchange": "NYSE",   "country": "colombia", "currency": "USD"},
+    "GRUPOAVAL.CL": {"brand_name": "Grupo Aval",              "parent_brand": "Grupo Aval",      "industry_tag": "financial",     "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "PFAVAL.CL":    {"brand_name": "Grupo Aval (Pref.)",      "parent_brand": "Grupo Aval",      "industry_tag": "financial",     "exchange": "BVC",    "country": "colombia", "currency": "COP"},
 
-    # USA
-    "AAPL":         {"brand_name": "Apple",          "industry_tag": "technology",    "exchange": "NASDAQ", "country": "usa",      "currency": "USD"},
-    "MSFT":         {"brand_name": "Microsoft",      "industry_tag": "technology",    "exchange": "NASDAQ", "country": "usa",      "currency": "USD"},
-    "AMZN":         {"brand_name": "Amazon",         "industry_tag": "e-commerce",    "exchange": "NASDAQ", "country": "usa",      "currency": "USD"},
-    "GOOGL":        {"brand_name": "Alphabet",       "industry_tag": "technology",    "exchange": "NASDAQ", "country": "usa",      "currency": "USD"},
-    "TSLA":         {"brand_name": "Tesla",          "industry_tag": "automotive",    "exchange": "NASDAQ", "country": "usa",      "currency": "USD"},
-    "NKE":          {"brand_name": "Nike",           "industry_tag": "apparel",       "exchange": "NYSE",   "country": "usa",      "currency": "USD"},
-    "DIS":          {"brand_name": "Walt Disney",    "industry_tag": "entertainment", "exchange": "NYSE",   "country": "usa",      "currency": "USD"},
+    # === Ecopetrol (múltiples cotizaciones) ===
+    "EC":           {"brand_name": "Ecopetrol",               "parent_brand": "Ecopetrol",       "industry_tag": "oil_gas",       "exchange": "NYSE",   "country": "colombia", "currency": "USD"},
+    "ECOPETROL.CL": {"brand_name": "Ecopetrol",               "parent_brand": "Ecopetrol",       "industry_tag": "oil_gas",       "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+
+    # === Colombia (BVC local, cotización única) ===
+    "ISA.CL":       {"brand_name": "ISA",                     "parent_brand": "ISA",             "industry_tag": "utilities",     "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "NUTRESA.CL":   {"brand_name": "Grupo Nutresa",           "parent_brand": "Grupo Nutresa",   "industry_tag": "food",          "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "GRUPOSURA.CL": {"brand_name": "Grupo SURA",              "parent_brand": "Grupo SURA",     "industry_tag": "financial",     "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "CEMARGOS.CL":  {"brand_name": "Cementos Argos",          "parent_brand": "Cementos Argos", "industry_tag": "materials",     "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "TGLS":         {"brand_name": "Tecnoglass",              "parent_brand": "Tecnoglass",     "industry_tag": "manufacturing", "exchange": "NASDAQ", "country": "colombia", "currency": "USD"},
+    "PFDAVVNDA.CL": {"brand_name": "Davivienda (Pref.)",      "parent_brand": "Davivienda",     "industry_tag": "banking",       "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "CORFICOLCF.CL":{"brand_name": "Corficolombiana",         "parent_brand": "Corficolombiana","industry_tag": "financial",     "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "BOGOTA.CL":    {"brand_name": "Banco de Bogotá",         "parent_brand": "Banco de Bogotá","industry_tag": "banking",       "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "CELSIA.CL":    {"brand_name": "Celsia",                  "parent_brand": "Celsia",         "industry_tag": "utilities",     "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "GEB.CL":       {"brand_name": "Grupo Energía Bogotá",    "parent_brand": "Grupo Energía Bogotá", "industry_tag": "utilities", "exchange": "BVC",  "country": "colombia", "currency": "COP"},
+    "CNEC.CL":      {"brand_name": "Canacol Energy",          "parent_brand": "Canacol Energy", "industry_tag": "oil_gas",       "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "TERPEL.CL":    {"brand_name": "Terpel",                  "parent_brand": "Terpel",         "industry_tag": "oil_gas",       "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "EXITO.CL":     {"brand_name": "Grupo Éxito",             "parent_brand": "Grupo Éxito",    "industry_tag": "retail",        "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "ETB.CL":       {"brand_name": "ETB",                     "parent_brand": "ETB",            "industry_tag": "telecom",       "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "MINEROS.CL":   {"brand_name": "Mineros",                 "parent_brand": "Mineros",        "industry_tag": "mining",        "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "CONCONCRET.CL":{"brand_name": "Conconcreto",             "parent_brand": "Conconcreto",    "industry_tag": "construction",  "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "BVC.CL":       {"brand_name": "Bolsa de Valores de Colombia", "parent_brand": "BVC",       "industry_tag": "financial",     "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+    "ICOLCAP.CL":   {"brand_name": "ETF COLCAP",              "parent_brand": "ETF COLCAP",    "industry_tag": "etf",           "exchange": "BVC",    "country": "colombia", "currency": "COP"},
+
+    # === USA ===
+    "AAPL":         {"brand_name": "Apple",                   "parent_brand": "Apple",          "industry_tag": "technology",    "exchange": "NASDAQ", "country": "usa",      "currency": "USD"},
+    "MSFT":         {"brand_name": "Microsoft",               "parent_brand": "Microsoft",      "industry_tag": "technology",    "exchange": "NASDAQ", "country": "usa",      "currency": "USD"},
+    "AMZN":         {"brand_name": "Amazon",                  "parent_brand": "Amazon",         "industry_tag": "e-commerce",    "exchange": "NASDAQ", "country": "usa",      "currency": "USD"},
+    "GOOGL":        {"brand_name": "Alphabet",                "parent_brand": "Alphabet",       "industry_tag": "technology",    "exchange": "NASDAQ", "country": "usa",      "currency": "USD"},
+    "TSLA":         {"brand_name": "Tesla",                   "parent_brand": "Tesla",          "industry_tag": "automotive",    "exchange": "NASDAQ", "country": "usa",      "currency": "USD"},
+    "NKE":          {"brand_name": "Nike",                    "parent_brand": "Nike",           "industry_tag": "apparel",       "exchange": "NYSE",   "country": "usa",      "currency": "USD"},
+    "DIS":          {"brand_name": "Walt Disney",             "parent_brand": "Walt Disney",    "industry_tag": "entertainment", "exchange": "NYSE",   "country": "usa",      "currency": "USD"},
 }
 
 LOOKBACK_DAYS = 5             # días de calendario que trae la extract() diaria
@@ -229,6 +250,7 @@ def build_dim_dataframe(tickers: dict) -> pd.DataFrame:
         {
             "Ticker": ticker,
             "Brand_Name": meta["brand_name"],
+            "Parent_Brand": meta["parent_brand"],
             "Industry_Tag": meta["industry_tag"],
             "Exchange": meta["exchange"],
             "Country": meta["country"],
@@ -268,6 +290,7 @@ INTRADAY_SCHEMA = [
 DIM_SCHEMA = [
     bigquery.SchemaField("Ticker", "STRING"),
     bigquery.SchemaField("Brand_Name", "STRING"),
+    bigquery.SchemaField("Parent_Brand", "STRING"),
     bigquery.SchemaField("Industry_Tag", "STRING"),
     bigquery.SchemaField("Exchange", "STRING"),
     bigquery.SchemaField("Country", "STRING"),
@@ -406,6 +429,7 @@ def refresh_views(client: bigquery.Client):
             f.Date                          AS Date_UTC,
             f.Ticker,
             d.Brand_Name,
+            d.Parent_Brand,
             d.Currency,
             f.Open, f.High, f.Low, f.Close,
             f.Volume,
@@ -421,6 +445,7 @@ def refresh_views(client: bigquery.Client):
             i.Timestamp                              AS Timestamp_UTC,
             i.Ticker,
             d.Brand_Name,
+            d.Parent_Brand,
             d.Currency,
             i.Open, i.High, i.Low, i.Close,
             i.Volume,
