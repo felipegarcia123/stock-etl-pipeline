@@ -86,32 +86,50 @@ Una fila = un ticker. Se refresca desde el dict `TICKERS` en cada corrida.
 
 ### Tickers cargados
 
-**Colombia (ADRs en USA, cotizan en USD)**
-| Ticker | Empresa      | Industria      | Bolsa  |
-|--------|--------------|----------------|--------|
-| `EC`   | Ecopetrol    | oil_gas        | NYSE   |
-| `CIB`  | Bancolombia  | banking        | NYSE   |
-| `AVAL` | Grupo Aval   | financial      | NYSE   |
-| `TGLS` | Tecnoglass   | manufacturing  | NASDAQ |
+31 tickers definidos en el dict `TICKERS` de `etl_pipeline.py` (fuente única de verdad). Incluye el ETF COLCAP (`ICOLCAP.CL`), por lo que no todos son acciones.
 
-**Colombia (BVC local, cotizan en COP)**
-| Ticker         | Empresa        | Industria  | Bolsa |
-|----------------|----------------|------------|-------|
-| `ISA.CL`       | ISA            | utilities  | BVC   |
-| `NUTRESA.CL`   | Grupo Nutresa  | food       | BVC   |
-| `GRUPOSURA.CL` | Grupo SURA     | financial  | BVC   |
-| `CEMARGOS.CL`  | Cementos Argos | materials  | BVC   |
+**Colombia — ADRs en USA (cotizan en USD)**
+| Ticker | Empresa | Industria | Bolsa |
+|---|---|---|---|
+| `CIB` | Bancolombia | banking | NYSE |
+| `AVAL` | Grupo Aval | financial | NYSE |
+| `EC` | Ecopetrol | oil_gas | NYSE |
+| `TGLS` | Tecnoglass | manufacturing | NASDAQ |
+
+**Colombia — BVC local (cotizan en COP)**
+| Ticker | Empresa | Industria | Bolsa |
+|---|---|---|---|
+| `GRUPOAVAL.CL` | Grupo Aval | financial | BVC |
+| `PFAVAL.CL` | Grupo Aval (Pref.) | financial | BVC |
+| `ECOPETROL.CL` | Ecopetrol | oil_gas | BVC |
+| `ISA.CL` | ISA | utilities | BVC |
+| `NUTRESA.CL` | Grupo Nutresa | food | BVC |
+| `GRUPOSURA.CL` | Grupo SURA | financial | BVC |
+| `CEMARGOS.CL` | Cementos Argos | materials | BVC |
+| `PFDAVVNDA.CL` | Davivienda (Pref.) | banking | BVC |
+| `CORFICOLCF.CL` | Corficolombiana | financial | BVC |
+| `BOGOTA.CL` | Banco de Bogotá | banking | BVC |
+| `CELSIA.CL` | Celsia | utilities | BVC |
+| `GEB.CL` | Grupo Energía Bogotá | utilities | BVC |
+| `CNEC.CL` | Canacol Energy | oil_gas | BVC |
+| `TERPEL.CL` | Terpel | oil_gas | BVC |
+| `EXITO.CL` | Grupo Éxito | retail | BVC |
+| `ETB.CL` | ETB | telecom | BVC |
+| `MINEROS.CL` | Mineros | mining | BVC |
+| `CONCONCRET.CL` | Conconcreto | construction | BVC |
+| `BVC.CL` | Bolsa de Valores de Colombia | financial | BVC |
+| `ICOLCAP.CL` | ETF COLCAP | etf | BVC |
 
 **USA (cotizan en USD)**
-| Ticker  | Empresa      | Industria      | Bolsa  |
-|---------|--------------|----------------|--------|
-| `AAPL`  | Apple        | technology     | NASDAQ |
-| `MSFT`  | Microsoft    | technology     | NASDAQ |
-| `AMZN`  | Amazon       | e-commerce     | NASDAQ |
-| `GOOGL` | Alphabet     | technology     | NASDAQ |
-| `TSLA`  | Tesla        | automotive     | NASDAQ |
-| `NKE`   | Nike         | apparel        | NYSE   |
-| `DIS`   | Walt Disney  | entertainment  | NYSE   |
+| Ticker | Empresa | Industria | Bolsa |
+|---|---|---|---|
+| `AAPL` | Apple | technology | NASDAQ |
+| `MSFT` | Microsoft | technology | NASDAQ |
+| `AMZN` | Amazon | e-commerce | NASDAQ |
+| `GOOGL` | Alphabet | technology | NASDAQ |
+| `TSLA` | Tesla | automotive | NASDAQ |
+| `NKE` | Nike | apparel | NYSE |
+| `DIS` | Walt Disney | entertainment | NYSE |
 
 ⚠️ **Cuidado al comparar precios entre tickers**: los ADRs vienen en USD y los
 `.CL` en COP, están en escalas totalmente distintas. Usa `Currency` en un JOIN
@@ -216,7 +234,7 @@ global) y `BILLING_ACCOUNT` (sale de `gcloud billing accounts list`).
 
 ```bash
 export PROJECT_ID="stock-etl-lacabrita"
-export BILLING_ACCOUNT="016179-0E0772-3E336F"
+export BILLING_ACCOUNT="<TU_BILLING_ACCOUNT_ID>"
 export REGION="us-central1"
 export BUCKET_NAME="${PROJECT_ID}-stock-raw"
 export DATASET_ID="kaggle_stock"
@@ -311,7 +329,7 @@ define la env var `BACKFILL_START`:
 BACKFILL_START="2020-01-01" python etl_pipeline.py
 ```
 
-Con 15 tickers × ~1500 días ≈ 22.500 filas. El MERGE se encarga de que ninguna
+Con 31 tickers × ~1500 días ≈ 46.500 filas. El MERGE se encarga de que ninguna
 se duplique si accidentalmente lo corres de nuevo. Después de este one-shot,
 sigue corriendo el pipeline **sin** la env var — vuelve al modo diario y solo
 trae los últimos 5 días.
@@ -339,7 +357,7 @@ Secretos que debe tener el repo (Settings → Secrets and variables → Actions)
   BigQuery, no con `CAST` sobre tablas de texto crudo.
 - **MERGE en vez de append** en el fact table: correr el pipeline dos veces el
   mismo día no duplica filas. Condición: `target.Date = src.Date AND target.Ticker = src.Ticker`.
-- **WRITE_TRUNCATE** en el dim table: al ser pequeño (~8 filas) y venir del dict
+- **WRITE_TRUNCATE** en el dim table: al ser pequeño (31 filas) y venir del dict
   `TICKERS` que es la fuente de verdad, es más simple reescribirlo entero que
   hacer MERGE.
 - **GitHub Actions en vez de Cloud Scheduler**: gratis, versionado junto al
@@ -355,9 +373,9 @@ Secretos que debe tener el repo (Settings → Secrets and variables → Actions)
 - [x] Data intraday (por hora, tabla `stock_data_intraday`).
 - [x] Métricas derivadas (tabla `stock_metrics`).
 - [ ] **Bucket como staging**: cambiar el flow a `yfinance → GCS (Parquet) → BigQuery`.
-- [ ] **API en FastAPI** que exponga las tablas ya con los JOINs hechos.
-- [ ] **Dashboard en Streamlit** consumiendo la API.
-- [ ] **Agente conversacional** (LLM + function calling) sobre los mismos endpoints.
+- [x] **API en FastAPI** que exponga las tablas ya con los JOINs hechos (`api.py`, desplegada en Cloud Run).
+- [x] **Dashboard en Streamlit** consumiendo la API (`dashboard.py`).
+- [x] **Agente conversacional** (Claude + tool use) sobre los mismos endpoints (`chat_agent.py`, `pages/2_🤖_Chat.py`).
 
 > Cambiar el esquema (agregar/quitar columnas de una tabla existente) implica
 > **recrear la tabla** o hacer `ALTER TABLE ADD COLUMN`, porque
